@@ -1,6 +1,7 @@
-﻿using DaemonTechChallenge.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using DaemonTechChallenge.Data;
 using DaemonTechChallenge.Models;
-using Microsoft.EntityFrameworkCore;
+using DaemonTechChallenge.DTOs;
 
 namespace DaemonTechChallenge.Services;
 
@@ -13,7 +14,7 @@ public class ReportService : IReportService
         _context = context;
     }
 
-    public async Task<List<DailyReport>> GetReportsAsync(string CNPJ, DateTime? startDate, DateTime? endDate)
+    public async Task<List<DailyReportDTO>> GetReportsAsync(string CNPJ, DateTime? startDate, DateTime? endDate)
     {
         var query = _context.DailyReport.AsQueryable();
 
@@ -34,6 +35,19 @@ public class ReportService : IReportService
             query = query.Where(r => r.DtComptc < endDate.Value);
         }
 
-        return await query.ToListAsync();
+        var reports = (await query.ToListAsync())
+            .Select(r => new DailyReportDTO(
+                r.Id,
+                r.CnpjFundo,
+                r.DtComptc,
+                r.VlTotal,
+                r.VlQuota,
+                r.VlPatrimLiq,
+                r.CaptcDia,
+                r.ResgDia,
+                r.NrCotst
+            )).ToList();
+
+        return reports;
     }
 }

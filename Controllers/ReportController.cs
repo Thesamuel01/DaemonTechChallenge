@@ -1,6 +1,7 @@
-﻿using DaemonTechChallenge.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using DaemonTechChallenge.Models;
 using DaemonTechChallenge.Services;
-using Microsoft.AspNetCore.Mvc;
+using DaemonTechChallenge.DTOs;
 
 namespace DaemonTechChallenge.Controllers;
 
@@ -23,7 +24,7 @@ public class ReportController : ControllerBase
             return BadRequest("O parâmetro CNPJ é obrigatório.");
         }
 
-        List<DailyReport> reports = await _reportService.GetReportsAsync(CNPJ, StartDate, EndDate);
+        List<DailyReportDTO> reports = await _reportService.GetReportsAsync(CNPJ, StartDate, EndDate);
 
         return Ok(reports);
     }
