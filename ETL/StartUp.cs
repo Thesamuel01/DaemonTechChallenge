@@ -1,5 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using DaemonTechChallenge.ETL.Pipes;
+using DaemonTechChallenge.Helpers;
+using CsvHelper.Configuration;
+using System.Globalization;
+using DaemonTechChallenge.Models;
 using System.Threading.Tasks.Dataflow;
+using System.Diagnostics;
 
 namespace DaemonTechChallenge.ETL;
 
@@ -29,31 +35,44 @@ public class StartUp
 
     public async Task ExecuteETL()
     {
+        var stopwatch = Stopwatch.StartNew();
         var urls = GenerateUrls();
 
         foreach (var url in urls)
         {
-            var downloadBlock = Pipeline.CreateDownloadZipBlock();
-            var unzipBlock = Pipeline.CreateUnzipBlock();
-            var convertToDataTableBlock = Pipeline.CreateConvertToDataTableBlockAsync();
-            var batchBlock = Pipeline.CreateBatchBlock();
-            var storeBlock = Pipeline.CreateStoreBlock(_connectionString);
-
+            var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = ";" };
+            var tableOrder = new[] { "Id", "CnpjFundo", "DtComptc", "VlTotal", "VlQuota", "VlPatrimLiq", "CaptcDia", "ResgDia", "NrCotst" };
+            var fileExt = ".csv";
+            var tableName = "DailyReport";
             var linkOptions = new DataflowLinkOptions
             {
                 PropagateCompletion = true,
             };
-            downloadBlock.LinkTo(unzipBlock, linkOptions);
-            unzipBlock.LinkTo(batchBlock, linkOptions);
-            batchBlock.LinkTo(convertToDataTableBlock, linkOptions);
-            convertToDataTableBlock.LinkTo(storeBlock, linkOptions);
 
-            downloadBlock.Post(url);
-            downloadBlock.Complete();
+            var zipHelper = new ZipHelper();
+            var csvHelper = new CsvHelperLib(csvConfig, new CsvRecordMap());
+            var dataTableFormatHelper = new DataTableFormatHelper(tableOrder);
+            var dbConnection = new DBConnection(_connectionString);
 
-            await storeBlock.Completion;
+            var fetchZipData = new FetchZipDataPipe(zipHelper);
+            var readCsv = new ReadCsvPipe(csvHelper);
+            var batchBlock = new BatchBlock<DailyReport>(50000);
+            var convertToDataTable = new ConvertToDataTablePipe(dataTableFormatHelper);
+            var persistData = new PersistDataPipe(dbConnection);
+
+            var pipeline = new Pipeline(fetchZipData.CreateFetchZipDataBlock(fileExt), linkOptions);
+
+            pipeline.AddStageToPipeline(readCsv.CreateReadCsvBlock<DailyReport>());
+            pipeline.AddStageToPipeline(batchBlock);
+            pipeline.AddStageToPipeline(convertToDataTable.CreateConvertToDataTableBlock<DailyReport>());
+            pipeline.AddStageToPipeline(persistData.CreateStoreBlock(tableName));
+
+            await pipeline.Startup(url);
         }
 
+        stopwatch.Stop();
+
+        Console.WriteLine($"ETL execution took: {stopwatch.Elapsed.TotalMinutes} minutes");
     }
 
     private List<string> GenerateUrls()

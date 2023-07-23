@@ -1,13 +1,19 @@
-﻿namespace DaemonTechChallenge.ETL;
+﻿using CsvHelper.Configuration;
+using DaemonTechChallenge.Models;
 
-public record CsvRecord
+namespace DaemonTechChallenge.ETL;
+
+public sealed class CsvRecordMap : ClassMap<DailyReport>
 {
-    public string CNPJ_FUNDO { get; set; } = string.Empty;
-    public string DT_COMPTC { get; set; } = string.Empty;
-    public string VL_TOTAL { get; set; } = string.Empty;
-    public string VL_QUOTA { get; set; } = string.Empty;
-    public string VL_PATRIM_LIQ { get; set; } = string.Empty;
-    public string CAPTC_DIA { get; set; } = string.Empty;
-    public string RESG_DIA { get; set; } = string.Empty;
-    public string NR_COTST { get; set; } = string.Empty;
+    public CsvRecordMap()
+    {
+        Map(m => m.CnpjFundo).Name("CNPJ_FUNDO");
+        Map(m => m.DtComptc).Name("DT_COMPTC");
+        Map(m => m.VlTotal).Name("VL_TOTAL").TypeConverterOption.Format("N2");
+        Map(m => m.VlQuota).Name("VL_QUOTA").TypeConverterOption.Format("N12");
+        Map(m => m.VlPatrimLiq).Name("VL_PATRIM_LIQ").TypeConverterOption.Format("N2");
+        Map(m => m.CaptcDia).Name("CAPTC_DIA").TypeConverterOption.Format("N2");
+        Map(m => m.ResgDia).Name("RESG_DIA").TypeConverterOption.Format("N2");
+        Map(m => m.NrCotst).Name("NR_COTST");
+    }
 }
