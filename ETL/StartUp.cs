@@ -56,7 +56,7 @@ public class StartUp
 
             var fetchZipData = new FetchZipDataPipe(zipHelper);
             var readCsv = new ReadCsvPipe(csvHelper);
-            var batchBlock = new BatchBlock<DailyReport>(50000);
+            var batchBlock = new BatchBlock<DailyReport>(15000);
             var convertToDataTable = new ConvertToDataTablePipe(dataTableFormatHelper);
             var persistData = new PersistDataPipe(dbConnection);
 
