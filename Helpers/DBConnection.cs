@@ -6,30 +6,28 @@ namespace DaemonTechChallenge.Helpers;
 
 public class DBConnection : IDBConnection
 {
-    private MySqlConnection? _connection;
+    private MySqlConnection _connection;
     private readonly MySqlConnectionStringBuilder _connectionString;
 
     public DBConnection(string connectionString)
     {
         _connectionString = new MySqlConnectionStringBuilder(connectionString);
-        _connection = null;
+        _connection = new MySqlConnection(_connectionString.ConnectionString); ;
     }
 
     public async Task<bool> CloseAsync()
     {
-        if (_connection == null)
+        if (_connection.State == ConnectionState.Open)
         {
-            return false;
+            await _connection.CloseAsync();
         }
-
-        await _connection.CloseAsync();
 
         return _connection.State == ConnectionState.Closed;
     }
 
     public async Task<bool> OpenAsync()
     {
-        if (_connection == null)
+        if (_connection.State == ConnectionState.Closed)
         {
             _connection = new MySqlConnection(_connectionString.ConnectionString);
 
@@ -62,22 +60,18 @@ public class DBConnection : IDBConnection
 
     public bool Close()
     {
-        if (_connection == null)
+        if (_connection.State == ConnectionState.Open)
         {
-            return false;
+            _connection.Close();
         }
-
-        _connection.Close();
 
         return _connection.State == ConnectionState.Closed;
     }
 
     public bool Open()
     {
-        if (_connection == null)
+        if (_connection.State == ConnectionState.Closed)
         {
-            _connection = new MySqlConnection(_connectionString.ConnectionString);
-
             _connection.Open();
         }
 

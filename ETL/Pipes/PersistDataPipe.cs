@@ -37,8 +37,6 @@ public class PersistDataPipe
 
         _ = actionBlock.Completion.ContinueWith(task =>
         {
-            Console.WriteLine("Pipeline finished.");
-
             _connection.Close();
 
             Console.WriteLine("Pipeline finished.");
