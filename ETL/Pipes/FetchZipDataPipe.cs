@@ -12,12 +12,11 @@ public class FetchZipDataPipe
         _ziperHelper = ziperHelper;
     }
 
-    public TransformBlock<string, List<Stream>> CreateFetchZipDataBlock(string fileExt)
+    public TransformManyBlock<string, MemoryStream> CreateFetchZipDataBlock(string fileExt)
     {
-        var transformBlock = new TransformBlock<string, List<Stream>>(async url =>
+        var transformBlock = new TransformManyBlock<string, MemoryStream>(async url =>
         {
             var attempts = 5;
-            var streamList = new List<Stream>();
 
             while (attempts > 0)
             {
@@ -30,9 +29,8 @@ public class FetchZipDataPipe
                     response.EnsureSuccessStatusCode();
 
                     var stream = await response.Content.ReadAsStreamAsync();
-                    streamList.AddRange(_ziperHelper.Read(stream, fileExt));
 
-                    return streamList;
+                    return _ziperHelper.Read(stream, fileExt);
                 }
                 catch (Exception ex)
                 {
@@ -40,12 +38,12 @@ public class FetchZipDataPipe
                     attempts--;
                     if (attempts == 0)
                     {
-                        return streamList;
+                        return Enumerable.Empty<MemoryStream>();
                     }
                 }
             }
 
-            return streamList;
+            return Enumerable.Empty<MemoryStream>();
         });
 
         return transformBlock;

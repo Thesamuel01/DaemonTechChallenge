@@ -4,9 +4,9 @@ namespace DaemonTechChallenge.Helpers;
 
 public class ZipHelper : IZiperHelper
 {
-    public List<Stream> Read(Stream stream, string fileType)
+    public List<MemoryStream> Read(Stream stream, string fileType)
     {
-        var filesStreams = new List<Stream>();
+        var filesStreams = new List<MemoryStream>();
 
         using var zipArchive = new ZipArchive(stream, ZipArchiveMode.Read);
         for (int i = 0; i < zipArchive.Entries.Count; i++)

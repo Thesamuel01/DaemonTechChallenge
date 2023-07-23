@@ -2,5 +2,5 @@
 
 public interface IZiperHelper
 {
-    public List<Stream> Read(Stream stream, string fileType);
+    public List<MemoryStream> Read(Stream stream, string fileType);
 }

@@ -14,22 +14,18 @@ public class ReadCsvPipe
         _csvHelper = csvHelper;
     }
 
-    public TransformManyBlock<List<Stream>, T> CreateReadCsvBlock<T>()
+    public TransformManyBlock<Stream, T> CreateReadCsvBlock<T>()
     {
-        var transformBlock = new TransformManyBlock<List<Stream>, T>(async listStream =>
+        var transformBlock = new TransformManyBlock<Stream, T>(async stream =>
         {
             var results = new List<T>();
 
             Console.WriteLine("Reading CSV file.");
 
-            foreach (var stream in listStream)
-            {
-                using var csvStream = stream;
-                var items = await _csvHelper.ReadAsync<T>(csvStream);
-                results.AddRange(items);
-            }
+            using var csvStream = stream;
+            var items = await _csvHelper.ReadAsync<T>(csvStream);
 
-            return results;
+            return items;
         });
 
         return transformBlock;
