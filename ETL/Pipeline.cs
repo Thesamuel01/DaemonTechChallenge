@@ -1,5 +1,7 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using DaemonTechChallenge.Models;
+using FastMember;
 using MySqlConnector;
 using System.Data;
 using System.Globalization;
@@ -11,7 +13,7 @@ namespace DaemonTechChallenge.ETL;
 
 abstract public class Pipeline
 {
-    public static TransformBlock<string, Stream?> CreateDownloadBlock()
+    public static TransformBlock<string, Stream?> CreateDownloadZipBlock()
     {
         return new TransformBlock<string, Stream?>(async url =>
         {
@@ -20,16 +22,14 @@ abstract public class Pipeline
             {
                 try
                 {
-                    using (var client = new HttpClient())
-                    {
-                        Console.WriteLine($"Download data from: {url}");
-                        var response = await client.GetAsync(url);
+                    using var client = new HttpClient();
+                    Console.WriteLine($"Download data from: {url}");
+                    var response = await client.GetAsync(url);
 
-                        response.EnsureSuccessStatusCode();
+                    response.EnsureSuccessStatusCode();
 
-                        var stream = await response.Content.ReadAsStreamAsync();
-                        return stream;
-                    }
+                    var stream = await response.Content.ReadAsStreamAsync();
+                    return stream;
                 }
                 catch (Exception ex)
                 {
@@ -47,92 +47,66 @@ abstract public class Pipeline
     }
 
 
-    public static TransformManyBlock<Stream?, CsvRecord> CreateUnzipBlock()
+    public static TransformManyBlock<Stream?, DailyReport> CreateUnzipBlock()
     {
-        return new TransformManyBlock<Stream?, CsvRecord>(async downloadResult =>
+        return new TransformManyBlock<Stream?, DailyReport>(async downloadResult =>
         {
             if (downloadResult == null)
             {
-                return Enumerable.Empty<CsvRecord>();
+                return Enumerable.Empty<DailyReport>();
             }
 
-            using (var zipStream = downloadResult)
+            try
             {
-                try
+                using var zipArchive = new ZipArchive(downloadResult, ZipArchiveMode.Read);
+                var tasks = new List<(int Index, Task<List<DailyReport>> Task)>();
+
+                for (int i = 0; i < zipArchive.Entries.Count; i++)
                 {
-                    using (var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read))
+                    var entry = zipArchive.Entries[i];
+                    if (entry.Name.EndsWith(".csv"))
                     {
-                        var tasks = new List<(int Index, Task<List<CsvRecord>> Task)>();
-
-                        for (int i = 0; i < zipArchive.Entries.Count; i++)
+                        var task = Task.Run(async () =>
                         {
-                            var entry = zipArchive.Entries[i];
-                            if (entry.Name.EndsWith(".csv"))
-                            {
-                                var task = Task.Run(async () =>
-                                {
-                                    Console.WriteLine($"Processing {entry.Name}");
-                                    using (var entryStream = entry.Open())
-                                    {
-                                        var config = new CsvConfiguration(CultureInfo.CurrentCulture) { Delimiter = ";" };
-                                        using var csvParser = new CsvReader(new StreamReader(entryStream), config);
-                                        return await Task.FromResult(csvParser.GetRecords<CsvRecord>().ToList());
-                                    }
-                                });
+                            Console.WriteLine($"Processing {entry.Name}");
+                            using var entryStream = entry.Open();
+                            var config = new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = ";" };
+                            using var csvParser = new CsvReader(new StreamReader(entryStream), config);
 
-                                tasks.Add((i, task));
-                            }
-                        }
+                            csvParser.Context.RegisterClassMap<CsvRecordMap>();
+                            return await Task.FromResult(csvParser.GetRecords<DailyReport>().ToList());
+                        });
 
-                        var results = await Task.WhenAll(tasks.Select(t => t.Task));
-                        var orderedResults = tasks.OrderBy(t => t.Index).SelectMany((t, i) => results[i]).ToList();
-                        return orderedResults;
+                        tasks.Add((i, task));
                     }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Unzip failed. Error: {ex.Message}");
-                    return Enumerable.Empty<CsvRecord>();
-                }
+
+                var results = await Task.WhenAll(tasks.Select(t => t.Task));
+                var orderedResults = tasks.OrderBy(t => t.Index).SelectMany((t, i) => results[i]).ToList();
+                return orderedResults;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unzip failed. Error: {ex.Message}");
+                return Enumerable.Empty<DailyReport>();
             }
         });
     }
 
-    public static BatchBlock<CsvRecord> CreateBatchBlock()
+    public static BatchBlock<DailyReport> CreateBatchBlock()
     {
-        return new BatchBlock<CsvRecord>(20000);
+        return new BatchBlock<DailyReport>(20000);
     }
 
-    public static TransformBlock<IEnumerable<CsvRecord>, DataTable> CreateConvertToDataTableBlockAsync()
+    public static TransformBlock<IEnumerable<DailyReport>, DataTable> CreateConvertToDataTableBlockAsync()
     {
-        return new TransformBlock<IEnumerable<CsvRecord>, DataTable>(bulk =>
+        return new TransformBlock<IEnumerable<DailyReport>, DataTable>(bulk =>
         {
-            var dataTable = new DataTable();
-            dataTable.Columns.Add("ID", typeof(int));
-            dataTable.Columns.Add("CnpjFundo", typeof(string));
-            dataTable.Columns.Add("DtComptc", typeof(DateTime));
-            dataTable.Columns.Add("VlTotal", typeof(decimal));
-            dataTable.Columns.Add("VlQuota", typeof(decimal));
-            dataTable.Columns.Add("VlPatrimLiq", typeof(decimal));
-            dataTable.Columns.Add("CaptcDia", typeof(decimal));
-            dataTable.Columns.Add("ResgDia", typeof(decimal));
-            dataTable.Columns.Add("NrCotst", typeof(int));
+            var datatable = new DataTable();
+            using var reader = ObjectReader.Create(bulk, "Id", "CnpjFundo", "DtComptc", "VlTotal", "VlQuota", "VlPatrimLiq", "CaptcDia", "ResgDia", "NrCotst");
+            datatable.Load(reader);
 
-            foreach (var record in bulk)
-            {
-                dataTable.Rows.Add(
-                    0,
-                    record.CNPJ_FUNDO,
-                    DateTime.Parse(record.DT_COMPTC).Date,
-                    decimal.Parse(record.VL_TOTAL, CultureInfo.InvariantCulture),
-                    decimal.Parse(record.VL_QUOTA, CultureInfo.InvariantCulture),
-                    decimal.Parse(record.VL_PATRIM_LIQ, CultureInfo.InvariantCulture),
-                    decimal.Parse(record.CAPTC_DIA, CultureInfo.InvariantCulture),
-                    decimal.Parse(record.RESG_DIA, CultureInfo.InvariantCulture),
-                    int.Parse(record.NR_COTST));
-            }
-
-            return dataTable;
+            return datatable;
         });
     }
 
@@ -145,23 +119,21 @@ abstract public class Pipeline
             {
                 AllowLoadLocalInfile = true
             };
-            using (var connection = new MySqlConnection(connectionStringBuilder.ConnectionString))
+            using var connection = new MySqlConnection(connectionStringBuilder.ConnectionString);
+            var bulkCopy = new MySqlBulkCopy(connection)
             {
-                var bulkCopy = new MySqlBulkCopy(connection)
-                {
-                    DestinationTableName = "DailyReport",
-                };
+                DestinationTableName = "DailyReport",
+            };
 
-                Console.WriteLine($"Adding {dataTable.Rows.Count} rows in database");
+            Console.WriteLine($"Adding {dataTable.Rows.Count} rows in database");
 
-                try
-                {
-                    await bulkCopy.WriteToServerAsync(dataTable);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
+            try
+            {
+                await bulkCopy.WriteToServerAsync(dataTable);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         });
     }

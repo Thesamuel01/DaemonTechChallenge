@@ -33,7 +33,7 @@ public class StartUp
 
         foreach (var url in urls)
         {
-            var downloadBlock = Pipeline.CreateDownloadBlock();
+            var downloadBlock = Pipeline.CreateDownloadZipBlock();
             var unzipBlock = Pipeline.CreateUnzipBlock();
             var convertToDataTableBlock = Pipeline.CreateConvertToDataTableBlockAsync();
             var batchBlock = Pipeline.CreateBatchBlock();
