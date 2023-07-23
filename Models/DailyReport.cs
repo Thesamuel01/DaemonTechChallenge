@@ -12,11 +12,11 @@ public class DailyReport
     public string? CnpjFundo { get; set; }
     [Column(TypeName = "Date")]
     public DateTime DtComptc { get; set; }
-    [Column(TypeName = "decimal(14, 2)")]
+    [Column(TypeName = "decimal(20, 2)")]
     public decimal VlTotal { get; set; }
-    [Column(TypeName = "decimal(22, 12)")]
+    [Column(TypeName = "decimal(30, 12)")]
     public decimal VlQuota { get; set; }
-    [Column(TypeName = "decimal(14, 2)")]
+    [Column(TypeName = "decimal(20, 2)")]
     public decimal VlPatrimLiq { get; set; }
     [Column(TypeName = "decimal(14, 2)")]
     public decimal CaptcDia { get; set; }
