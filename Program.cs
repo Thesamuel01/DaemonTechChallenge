@@ -32,10 +32,11 @@ using (var scope = app.Services.CreateScope())
 
 if (runEtl)
 {
-    var etl = new StartUp(config);
+    var etl = new StartUpCopia(config);
 
     await etl.ExecuteETL();
 }
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
