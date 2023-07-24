@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace DaemonTechChallenge.Helpers;
+namespace DaemonTechChallenge.Data.Connection;
 
 public interface IDBConnection
 {

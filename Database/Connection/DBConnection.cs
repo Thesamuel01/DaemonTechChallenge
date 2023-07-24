@@ -1,8 +1,7 @@
 ﻿using MySqlConnector;
 using System.Data;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace DaemonTechChallenge.Helpers;
+namespace DaemonTechChallenge.Data.Connection;
 
 public class DBConnection : IDBConnection
 {
