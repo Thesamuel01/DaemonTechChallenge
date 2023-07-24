@@ -4,7 +4,6 @@ namespace DaemonTechChallenge.Database;
 
 public class RepositoryBase : IRepositoryBase
 {
-
     public AppDbContext Context { get; }
 
     public RepositoryBase(AppDbContext _context)
@@ -45,5 +44,10 @@ public class RepositoryBase : IRepositoryBase
     public void UpdateRange<T>(IEnumerable<T> entities) where T : class
     {
         Context.UpdateRange(entities);
+    }
+
+    public IQueryable<T> GetQueryable<T>() where T : class
+    {
+        return Context.Set<T>();
     }
 }

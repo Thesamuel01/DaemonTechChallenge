@@ -6,6 +6,7 @@ using System.Globalization;
 using DaemonTechChallenge.Models;
 using System.Threading.Tasks.Dataflow;
 using System.Diagnostics;
+using DaemonTechChallenge.Data.Connection;
 
 namespace DaemonTechChallenge.ETL;
 

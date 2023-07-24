@@ -3,6 +3,7 @@ using DaemonTechChallenge.Models;
 using DaemonTechChallenge.ETL;
 using Microsoft.EntityFrameworkCore;
 using DaemonTechChallenge.Services;
+using DaemonTechChallenge.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ var connectionString = config.GetConnectionString("MariaDBContext");
 builder.Services.AddScoped<AppDbContext>();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IRepositoryBase, RepositoryBase>();
 
 var app = builder.Build();
 var runEtl = true;

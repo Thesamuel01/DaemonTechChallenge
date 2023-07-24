@@ -9,4 +9,6 @@ public interface IRepositoryBase
     public void Delete<T>(T entity) where T : class;
     public void DeleteRange<T>(IEnumerable<T> entities) where T : class;
     public Task<bool> SaveChangesAsync();
+
+    public IQueryable<T> GetQueryable<T>() where T : class;
 }

@@ -7,16 +7,16 @@ namespace DaemonTechChallenge.Services;
 
 public class ReportService : IReportService
 {
-    private readonly AppDbContext _context;
+    private readonly IRepositoryBase _context;
 
-    public ReportService(AppDbContext context)
+    public ReportService(IRepositoryBase context)
     {
         _context = context;
     }
 
     public async Task<List<DailyReportDTO>> GetReportsAsync(string CNPJ, DateTime? startDate, DateTime? endDate)
     {
-        var query = _context.DailyReport.AsQueryable();
+        var query = _context.GetQueryable<DailyReport>();
 
         if (string.IsNullOrEmpty(CNPJ))
         {
