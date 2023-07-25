@@ -82,7 +82,7 @@ Before running the ETL process and the API, make sure you have a running instanc
 
 #### Run Docker Compose:
 ```bash
-docker compose -  docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 ```
 
 ### Running the Project
