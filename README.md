@@ -54,7 +54,8 @@ The API endpoint to access the fetched data. The following parameters are accept
 		"captcDia": 0.00,
 		"resgDia": 0.00,
 		"nrCotst": 1
-	}
+	},
+	/.../
 ]
 ```
 
