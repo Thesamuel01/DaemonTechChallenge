@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  daemon_db:
+    image: mariadb:lts
+    environment:
+      MARIADB_ROOT_PASSWORD: "master"
+      MARIADB_DATABASE: "ETLData"
+      MARIADB_ROOT_HOST: "%"
+    volumes:
+      - ./data:/var/lib/mysql
+    ports:
+      - 3306:3306

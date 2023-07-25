@@ -80,14 +80,9 @@ The API endpoint to access the fetched data. The following parameters are accept
 Before running the ETL process and the API, make sure you have a running instance of MariaDB LTS. If you prefer, you can use Docker to set up the database.
 
 
-#### Build the Docker Image:
+#### Run Docker Compose:
 ```bash
-docker build -t daemon_maria_db:lts .
-```
-
-#### Build the Docker Image:
-```bash
-docker run --name daemon_db -d daemon_maria_db:lts
+docker compose -  docker-compose.dev.yml up -d
 ```
 
 ### Running the Project
