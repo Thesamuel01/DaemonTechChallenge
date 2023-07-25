@@ -13,8 +13,8 @@ public class ConvertToDataTablePipe
     {
         _dataTableFormat = dataTableFormat;
     }
-
-    public TransformBlock<IEnumerable<T>, DataTable> CreateConvertToDataTableBlock<T>()
+    
+    public TransformBlock<IEnumerable<T>, DataTable> CreateConvertToDataTableBlock<T>() where T : class
     {
         var transformBLock = new TransformBlock<IEnumerable<T>, DataTable>(bulk =>
         {

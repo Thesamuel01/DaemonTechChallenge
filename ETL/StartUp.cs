@@ -37,7 +37,8 @@ public class StartUp
     public async Task ExecuteETL()
     {
         var stopwatch = Stopwatch.StartNew();
-        var urls = GenerateUrls();
+        var urls =  GenerateUrls();
+        var batchSize = 25000;
 
         foreach (var url in urls)
         {
@@ -49,15 +50,16 @@ public class StartUp
             {
                 PropagateCompletion = true,
             };
+            var httpClient = new HttpClient();
 
             var zipHelper = new ZipHelper();
             var csvHelper = new CsvHelperLib(csvConfig, new CsvRecordMap());
             var dataTableFormatHelper = new DataTableFormatHelper(tableOrder);
             var dbConnection = new DBConnection(_connectionString);
 
-            var fetchZipData = new FetchZipDataPipe(zipHelper);
+            var fetchZipData = new FetchZipDataPipe(zipHelper, httpClient);
             var readCsv = new ReadCsvPipe(csvHelper);
-            var batchBlock = new BatchBlock<DailyReport>(15000);
+            var batchBlock = new BatchBlock<DailyReport>(batchSize);
             var convertToDataTable = new ConvertToDataTablePipe(dataTableFormatHelper);
             var persistData = new PersistDataPipe(dbConnection);
 

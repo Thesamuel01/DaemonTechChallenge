@@ -14,7 +14,7 @@ public class ReportService : IReportService
         _context = context;
     }
 
-    public async Task<List<DailyReportDTO>> GetReportsAsync(string CNPJ, DateTime? startDate, DateTime? endDate)
+    public async Task<List<DailyReportDTO>> GetReportsAsync(string? CNPJ, DateTime? startDate, DateTime? endDate)
     {
         var query = _context.GetQueryable<DailyReport>();
 

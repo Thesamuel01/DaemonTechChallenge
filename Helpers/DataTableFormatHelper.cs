@@ -1,13 +1,14 @@
-﻿using FastMember;
+﻿using DaemonTechChallenge.Helpers;
+using FastMember;
 using System.Data;
 
-namespace DaemonTechChallenge.Helpers;
+namespace DaemonTechChallenge;
 
 public class DataTableFormatHelper : IDataTableFormat
 {
     private string[]? MembersOrder { get; set; }
 
-    public DataTableFormatHelper(string[]? membersOrder)
+    public DataTableFormatHelper(string[] membersOrder)
     {
         MembersOrder = membersOrder;
     }

@@ -12,7 +12,7 @@ public class ReadCsvPipe
         _csvHelper = csvHelper;
     }
 
-    public TransformManyBlock<Stream, T> CreateReadCsvBlock<T>()
+    public TransformManyBlock<Stream, T> CreateReadCsvBlock<T>() where T : class
     {
         var transformBlock = new TransformManyBlock<Stream, T>(async stream =>
         {

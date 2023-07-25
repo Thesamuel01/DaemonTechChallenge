@@ -6,10 +6,12 @@ namespace DaemonTechChallenge.ETL.Pipes;
 public class FetchZipDataPipe
 {
     private readonly IZiperHelper _ziperHelper;
+    private readonly HttpClient _httpClient;
 
-    public FetchZipDataPipe(IZiperHelper ziperHelper)
+    public FetchZipDataPipe(IZiperHelper ziperHelper, HttpClient httpClient)
     {
         _ziperHelper = ziperHelper;
+        _httpClient = httpClient;
     }
 
     public TransformManyBlock<string, MemoryStream> CreateFetchZipDataBlock(string fileExt)
@@ -22,9 +24,8 @@ public class FetchZipDataPipe
             {
                 try
                 {
-                    using var client = new HttpClient();
                     Console.WriteLine($"Download data from: {url}");
-                    var response = await client.GetAsync(url);
+                    var response = await _httpClient.GetAsync(url);
 
                     response.EnsureSuccessStatusCode();
 
